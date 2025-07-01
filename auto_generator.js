@@ -57,13 +57,8 @@ async function generateAndSaveWallet() {
 }
 
 async function saveWalletToFile(wallet) {
-  // Nama file akan digunakan langsung, tanpa path folder.
   const filename = `wallet_${wallet.address.slice(-6)}.txt`;
-
-  // Membuat timestamp dengan format YYYY-MM-DD HH:MM:SS
   const timestamp = new Date().toISOString().replace('T', ' ').slice(0, 19);
-
-  // Konten file tetap sama
   const content = `OCTRA WALLET
 ==================================================
 
@@ -83,9 +78,7 @@ Signature Algorithm: Ed25519
 Derivation: BIP39-compatible (PBKDF2-HMAC-SHA512, 2048 iterations)`;
 
   try {
-    // Langsung tulis file ke direktori saat ini. Tidak perlu membuat folder.
     await fs.promises.writeFile(filename, content);
-    // Pesan log diubah untuk mencerminkan lokasi baru.
     console.log(`   📂 Wallet berhasil disimpan sebagai: ${filename}`);
   } catch (error) {
     console.error(`❌ Gagal menyimpan file wallet: ${error.message}`);
@@ -105,12 +98,9 @@ async function startInfiniteLoop() {
 }
 function runSingleCycle() {
   return new Promise(async (resolve) => {
-    // 1. Hitung jumlah & durasi
     const walletCount = Math.floor(Math.random() * (MAX_WALLET_COUNT_AUTO - MIN_WALLET_COUNT_AUTO + 1)) + MIN_WALLET_COUNT_AUTO;
     const totalDurationHours = MAX_DELAY_HOURS;
     const totalDurationMs = totalDurationHours * 60 * 60 * 1000;
-
-    // 2. Hitung interval antar pembuatan wallet
     const intervalMs = Math.floor(totalDurationMs / walletCount);
     const intervalMinutes = (intervalMs / (60 * 1000)).toFixed(1);
 
@@ -120,13 +110,9 @@ function runSingleCycle() {
     console.log(`   Durasi Siklus: ${totalDurationHours} jam`);
     console.log(`   Interval per Wallet: ~${intervalMinutes} menit`);
     console.log("------------------------------------------------------");
-
-    // 3. Jalankan loop pembuatan wallet dengan jeda
     for (let i = 0; i < walletCount; i++) {
         console.log(`\n--- Proses Wallet ke-${i + 1} dari ${walletCount} ---`);
         await generateAndSaveWallet();
-        
-        // Jika bukan wallet terakhir, tunggu sesuai interval
         if (i < walletCount - 1) {
             console.log(`   ...menunggu ${intervalMinutes} menit untuk wallet berikutnya...`);
             await new Promise(res => setTimeout(res, intervalMs));
@@ -134,13 +120,9 @@ function runSingleCycle() {
     }
 
     console.log("\n\n✅ Siklus distribusi wallet saat ini telah selesai.");
-    resolve(); // Selesaikan promise agar loop utama bisa lanjut
+    resolve(); 
   });
 }
-
-// ========================================================================
-// ## FUNGSI UTAMA & MENU INTERAKTIF (Tidak ada perubahan di sini) ##
-// ========================================================================
 
 async function main() {
   const prompts = (await import('prompts')).default;
@@ -213,5 +195,5 @@ async function bootstrap() {
     await main();
 }
 
-// Mulai dari sini!
+
 bootstrap();
