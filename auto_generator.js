@@ -1,21 +1,20 @@
-import fs from 'fs';
-import path from 'path';
-import { execSync } from 'child_process';
-import prompts from 'prompts';
-
+const fs = require('fs');
+const path = require('path');
+const { execSync } = require('child_process');
 // ========================================================================
 // ## BAGIAN KONFIGURASI ##
 // ========================================================================
+
 // Durasi total untuk satu siklus pembuatan wallet.
 const MAX_DELAY_HOURS = 24;
-// ========================================================================
+
 // Rentang jumlah wallet yang akan dibuat dalam satu siklus.
 const MIN_WALLET_COUNT_AUTO = 50;
 const MAX_WALLET_COUNT_AUTO = 100;
-// ========================================================================
 async function generateAndSaveWallet() {
   console.log("🚀 Menghubungi server untuk membuat wallet...");
-  const url = "http://IP_VPS:8888/generate";
+  // Pastikan Anda mengganti "IP_VPS" dengan alamat IP server Anda yang sebenarnya
+  const url = "http://IP_VPS:8888/generate"; 
   const options = {
     method: "POST",
     headers: { "Accept": "*/*", "Referer": "http://IP_VPS:8888/" },
@@ -57,7 +56,9 @@ async function generateAndSaveWallet() {
 }
 
 async function saveWalletToFile(wallet) {
+  const dir = 'wallets'; 
   const filename = `wallet_${wallet.address.slice(-6)}.txt`;
+  const fullPath = path.join(dir, filename); 
   const timestamp = new Date().toISOString().replace('T', ' ').slice(0, 19);
   const content = `OCTRA WALLET
 ==================================================
@@ -78,12 +79,14 @@ Signature Algorithm: Ed25519
 Derivation: BIP39-compatible (PBKDF2-HMAC-SHA512, 2048 iterations)`;
 
   try {
-    await fs.promises.writeFile(filename, content);
-    console.log(`   📂 Wallet berhasil disimpan sebagai: ${filename}`);
+    await fs.promises.mkdir(dir, { recursive: true }); 
+    await fs.promises.writeFile(fullPath, content);
+    console.log(`   📂 Wallet berhasil disimpan di: ${fullPath}`);
   } catch (error) {
     console.error(`❌ Gagal menyimpan file wallet: ${error.message}`);
   }
 }
+
 async function startInfiniteLoop() {
   console.log("\n======================================================");
   console.log("   ♾️   Memulai Mode Otomatis (Distribusi Merata)  ♾️");
@@ -96,12 +99,15 @@ async function startInfiniteLoop() {
     await new Promise(res => setTimeout(res, 5000));
   }
 }
+
 function runSingleCycle() {
   return new Promise(async (resolve) => {
+    // 1. Hitung jumlah & durasi
     const walletCount = Math.floor(Math.random() * (MAX_WALLET_COUNT_AUTO - MIN_WALLET_COUNT_AUTO + 1)) + MIN_WALLET_COUNT_AUTO;
     const totalDurationHours = MAX_DELAY_HOURS;
     const totalDurationMs = totalDurationHours * 60 * 60 * 1000;
 
+    // 2. Hitung interval antar pembuatan wallet
     const intervalMs = Math.floor(totalDurationMs / walletCount);
     const intervalMinutes = (intervalMs / (60 * 1000)).toFixed(1);
 
@@ -111,7 +117,6 @@ function runSingleCycle() {
     console.log(`   Durasi Siklus: ${totalDurationHours} jam`);
     console.log(`   Interval per Wallet: ~${intervalMinutes} menit`);
     console.log("------------------------------------------------------");
-
     for (let i = 0; i < walletCount; i++) {
         console.log(`\n--- Proses Wallet ke-${i + 1} dari ${walletCount} ---`);
         await generateAndSaveWallet();
@@ -127,7 +132,7 @@ function runSingleCycle() {
 }
 
 async function main() {
-  const prompts = (await import('prompts')).default;
+  const prompts = require('prompts'); 
 
   while (true) {
     console.log("\n=====================================");
@@ -159,7 +164,7 @@ async function main() {
           for (let i = 0; i < countResponse.count; i++) {
               console.log(`--- Proses Wallet Manual ke-${i + 1} dari ${countResponse.count} ---`);
               await generateAndSaveWallet();
-              if (i < countResponse.count - 1) await new Promise(res => setTimeout(res, 1000));
+              if (i < countResponse.count - 1) await new Promise(res => setTimeout(res, 1000)); 
           }
           console.log("\n✅ Pembuatan wallet manual selesai.");
           await prompts({
@@ -181,20 +186,24 @@ async function bootstrap() {
     console.log("🔧 Memeriksa dependensi...");
     const requiredPackage = 'prompts';
     try {
-        require.resolve(requiredPackage);
+        require(requiredPackage); 
     } catch (err) {
         console.log(`   -> Dependensi '${requiredPackage}' tidak ditemukan. Memulai instalasi...`);
         try {
             if (!fs.existsSync('package.json')) {
-                execSync('npm init -y', { stdio: 'ignore' });
+                console.log("   -> Membuat package.json...");
+                execSync('npm init -y', { stdio: ['ignore', 'inherit', 'inherit'] });
             }
+            // Instal prompts
+            console.log(`   -> Menginstal '${requiredPackage}'...`);
             execSync(`npm install ${requiredPackage} --save`, { stdio: 'inherit' });
+            console.log(`   ✅ Dependensi '${requiredPackage}' berhasil diinstal.`);
         } catch (error) {
-            console.error(`❌ Gagal menginstal '${requiredPackage}'. Coba jalankan "npm install ${requiredPackage}" secara manual.`);
+            console.error(`❌ Gagal menginstal '${requiredPackage}'. Pastikan Node.js dan npm terinstal dengan benar.`);
+            console.error(`   Coba jalankan "npm install ${requiredPackage}" secara manual di terminal Anda.`);
             process.exit(1);
         }
     }
     await main();
 }
-
 bootstrap();
