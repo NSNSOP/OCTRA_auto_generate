@@ -57,22 +57,36 @@ async function generateAndSaveWallet() {
 }
 
 async function saveWalletToFile(wallet) {
-  const dir = 'wallets';
+  // Nama file akan digunakan langsung, tanpa path folder.
   const filename = `wallet_${wallet.address.slice(-6)}.txt`;
-  const fullPath = path.join(dir, filename);
-  const content = `OCTRA WALLET
-=======================================
-⚠️ PERINGATAN: JAGA KERAHASIAAN FILE INI!
 
-Alamat: ${wallet.address}
+  // Membuat timestamp dengan format YYYY-MM-DD HH:MM:SS
+  const timestamp = new Date().toISOString().replace('T', ' ').slice(0, 19);
+
+  // Konten file tetap sama
+  const content = `OCTRA WALLET
+==================================================
+
+SECURITY WARNING: KEEP THIS FILE SECURE AND NEVER SHARE YOUR PRIVATE KEY
+
+Generated: ${timestamp}
+Address Format: oct + Base58(SHA256(pubkey))
+
 Mnemonic: ${wallet.mnemonic.join(' ')}
-Private Key (Base64): ${wallet.private_key_b64}
-=======================================
-Generated on: ${new Date().toISOString()}`;
+Private Key (B64): ${wallet.private_key_b64}
+Public Key (B64): ${wallet.public_key_b64}
+Address: ${wallet.address}
+
+Technical Details:
+Entropy: ${wallet.entropy_hex}
+Signature Algorithm: Ed25519
+Derivation: BIP39-compatible (PBKDF2-HMAC-SHA512, 2048 iterations)`;
+
   try {
-    await fs.promises.mkdir(dir, { recursive: true });
-    await fs.promises.writeFile(fullPath, content.trim());
-    console.log(`   📂 Wallet berhasil disimpan di: ${fullPath}`);
+    // Langsung tulis file ke direktori saat ini. Tidak perlu membuat folder.
+    await fs.promises.writeFile(filename, content);
+    // Pesan log diubah untuk mencerminkan lokasi baru.
+    console.log(`   📂 Wallet berhasil disimpan sebagai: ${filename}`);
   } catch (error) {
     console.error(`❌ Gagal menyimpan file wallet: ${error.message}`);
   }
