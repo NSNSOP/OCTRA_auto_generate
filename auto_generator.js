@@ -6,18 +6,13 @@ import prompts from 'prompts';
 // ========================================================================
 // ## BAGIAN KONFIGURASI ##
 // ========================================================================
-
 // Durasi total untuk satu siklus pembuatan wallet.
 const MAX_DELAY_HOURS = 24;
-
+// ========================================================================
 // Rentang jumlah wallet yang akan dibuat dalam satu siklus.
 const MIN_WALLET_COUNT_AUTO = 50;
 const MAX_WALLET_COUNT_AUTO = 100;
-
 // ========================================================================
-// ## FUNGSI INTI (Tidak ada perubahan di sini) ##
-// ========================================================================
-
 async function generateAndSaveWallet() {
   console.log("🚀 Menghubungi server untuk membuat wallet...");
   const url = "http://IP_VPS:8888/generate";
@@ -82,11 +77,6 @@ Generated on: ${new Date().toISOString()}`;
     console.error(`❌ Gagal menyimpan file wallet: ${error.message}`);
   }
 }
-
-// ========================================================================
-// ## LOGIKA MODE OTOMATIS (DIPERBARUI TOTAL) ##
-// ========================================================================
-
 async function startInfiniteLoop() {
   console.log("\n======================================================");
   console.log("   ♾️   Memulai Mode Otomatis (Distribusi Merata)  ♾️");
@@ -99,10 +89,6 @@ async function startInfiniteLoop() {
     await new Promise(res => setTimeout(res, 5000));
   }
 }
-
-/**
- * Fungsi ini menjalankan SATU SIKLUS PENUH dengan logika distribusi merata.
- */
 function runSingleCycle() {
   return new Promise(async (resolve) => {
     // 1. Hitung jumlah & durasi
